@@ -8,7 +8,7 @@
 
 ## Preface
 
-So, I was in my car, and I receive a call from "my bank" — and I've been a software developer for about a decade and I've been through this scam dozens of times before. So I just let it ring through. He calls again. That's twice. He should move on now. And then he calls again, and I start getting irritated, but I let it ring through. He calls a 4th time, and I pick up the phone (and I was already upset about other things that day and I saw an opportunity to take out my anger on some scammer). So I pick up the phone and I just scream at him:
+So, I was in my car, and I receive a call from "my bank" — and I've been a software developer for about a decade and I've been through this scam dozens of times before. So I just let it ring through. He calls again. That's twice. He should move on now. And then he calls again, and I start getting irritated, but I let it ring through. He calls a 4th time, and I pick up the phone. So I pick up the phone and I just scream at him:
 
 > **Me:** "Will you shut the fuck up!"
 >
