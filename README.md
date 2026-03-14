@@ -108,27 +108,36 @@ This eliminates the energy waste of proof-of-work mining while providing Sybil r
 
 ### 2.2 The Blockchain Handshake Protocol
 
-A UDP/QUIC-like TLS tunnel replaces the traditional TCP three-way handshake (SYN → SYN-ACK → ACK) with blockchain-based handshake integrated at the transport layer:
+A UDP/QUIC-like TLS tunnel replaces the traditional TCP three-way handshake (SYN → SYN-ACK → ACK) with a four-step blockchain-based handshake integrated at the transport layer. The design resolves a fundamental tension: mutual authentication requires both parties to prove themselves, but DDoS resistance requires the responder to avoid allocating state for unverified initiators. The stateless cookie step handles this — Bob can filter spoofed-source floods before doing any real cryptographic work.
 
 **Step 1: TLS Tunnel Establishment**
 
-You and whoever you're connecting to establish an encrypted TLS tunnel. This replaces SYN-ACK and provides confidentiality for subsequent authentication steps.
+You and whoever you're connecting to establish an encrypted TLS tunnel. This replaces SYN-ACK and provides confidentiality for all subsequent steps.
 
-**Step 2: Chain Tip Exchange**
+**Step 2: Stateless Cookie Exchange (DDoS Filter)**
 
-Inside the TLS tunnel, both parties exchange ephemeral public keys and their current chain tips (the most recent block in their avatar blockchain). Each party verifies:
+Before allocating any handshake state, the responder issues a cheap signed cookie back to the initiator:
 
-- The chain tip is a valid continuation of previous interactions (if any exist)
-- The cryptographic signatures are valid
-- The timestamp is reasonable (prevents replay attacks with old chain tips)
+- Responder generates a short-lived HMAC cookie bound to the initiator's IP address and a server-side rotating secret
+- Initiator must echo this cookie back in the next message
+- This proves the initiator's source IP is reachable (eliminates spoofed-source DDoS) without the responder storing any per-connection state
+- Inspired by QUIC's Retry packet and WireGuard's cookie mechanism
 
-**Step 3: Cryptographic Verification and Ratchet Advancement**
+**Step 3: Chain Tip Exchange**
 
-Each block-stamp advances the double-ratchet state. The verification process checks chain validity, timestamp reasonableness, and cryptographic signatures. This handshake sequence can't be parallelized or accelerated — each step must complete before the next begins, and the protocol enforces rate limits on handshake frequency through negative feedback mechanisms.
+Inside the TLS tunnel, with the cookie verified, both parties exchange their signed HandshakeTokens — ephemeral proofs-of-possession containing:
+
+- Current chain tip hash (links the session to the avatar's continuous history)
+- Fresh timestamp and random nonce (prevents replay)
+- Ed25519 signature over all fields (proves key control)
+
+Each party verifies the other's token: signature valid, timestamp within clock-skew window, chain tip hash well-formed. The responder additionally binds their token to the initiator's offer via a SHA-256 hash, so no valid response can be detached and replayed against a different session.
 
 **Step 4: Verification or Abort**
 
-If verification succeeds, the connection proceeds and both parties add a new block to their respective chains documenting this interaction. If verification fails, the handshake is aborted and no connection is established. This prevents blind handshakes with unverified entities.
+If both tokens verify, the connection proceeds and both parties append a new `Handshake` block to their respective chains documenting this interaction. If either verification fails, the handshake aborts — no block is written, no connection is established, and the failed attempt is recorded against the initiator's avatar for rate-limiting purposes. Repeated failures trigger exponentially increasing backoff, making sustained attack campaigns self-defeating.
+
+This handshake sequence can't be parallelized or accelerated — each step must complete before the next begins, and the protocol enforces rate limits on handshake frequency through the negative feedback mechanism described in §3.1.
 
 ### 2.3 Avatar Structure and Merkle Trees
 
