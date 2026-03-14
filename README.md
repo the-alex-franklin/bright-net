@@ -108,32 +108,23 @@ This eliminates the energy waste of proof-of-work mining while providing Sybil r
 
 ### 2.2 The Blockchain Handshake Protocol
 
-A UDP/QUIC-like TLS tunnel replaces the traditional TCP three-way handshake (SYN → SYN-ACK → ACK) with a four-step blockchain-based handshake integrated at the transport layer. The design resolves a fundamental tension: mutual authentication requires both parties to prove themselves, but DDoS resistance requires the responder to avoid allocating state for unverified initiators. The stateless cookie step handles this — Bob can filter spoofed-source floods before doing any real cryptographic work.
+A QUIC/TLS tunnel replaces the traditional TCP three-way handshake with a two-message blockchain handshake. The design resolves a fundamental tension: mutual authentication requires both parties to prove themselves, but DDoS resistance requires the responder to avoid allocating state for unverified initiators. Bright-net handles this through three defences that operate at distinct layers, described in §3.1.
 
-**Step 1: TLS Tunnel Establishment**
+**Step 1: TLS Tunnel Establishment (via QUIC)**
 
-You and whoever you're connecting to establish an encrypted TLS tunnel. This replaces SYN-ACK and provides confidentiality for all subsequent steps.
+You and whoever you're connecting to establish an encrypted QUIC/TLS tunnel. This provides confidentiality for all subsequent steps and activates QUIC's built-in Retry mechanism. Before any application state is allocated, QUIC sends a Retry packet that forces the initiator to prove their source IP is reachable — eliminating spoofed-source floods at the transport layer for free, as specified in RFC 9000 §8.1.
 
-**Step 2: Stateless Cookie Exchange (DDoS Filter)**
+**Step 2: Chain Tip Exchange**
 
-Before allocating any handshake state, the responder issues a cheap signed cookie back to the initiator:
-
-- Responder generates a short-lived HMAC cookie bound to the initiator's IP address and a server-side rotating secret
-- Initiator must echo this cookie back in the next message
-- This proves the initiator's source IP is reachable (eliminates spoofed-source DDoS) without the responder storing any per-connection state
-- Inspired by QUIC's Retry packet and WireGuard's cookie mechanism
-
-**Step 3: Chain Tip Exchange**
-
-Inside the TLS tunnel, with the cookie verified, both parties exchange their signed HandshakeTokens — ephemeral proofs-of-possession containing:
+Inside the encrypted tunnel, both parties exchange signed HandshakeTokens — ephemeral proofs-of-possession containing:
 
 - Current chain tip hash (links the session to the avatar's continuous history)
 - Fresh timestamp and random nonce (prevents replay)
 - Ed25519 signature over all fields (proves key control)
 
-Each party verifies the other's token: signature valid, timestamp within clock-skew window, chain tip hash well-formed. The responder additionally binds their token to the initiator's offer via a SHA-256 hash, so no valid response can be detached and replayed against a different session.
+Each party verifies the other's token: signature valid, timestamp within clock-skew window, chain tip hash well-formed. The responder binds their token to the initiator's offer via a SHA-256 hash, so no valid response can be detached and replayed against a different session.
 
-**Step 4: Verification or Abort**
+**Step 3: Verification or Abort**
 
 If both tokens verify, the connection proceeds and both parties append a new `Handshake` block to their respective chains documenting this interaction. If either verification fails, the handshake aborts — no block is written, no connection is established, and the failed attempt is recorded against the initiator's avatar for rate-limiting purposes. Repeated failures trigger exponentially increasing backoff, making sustained attack campaigns self-defeating.
 
@@ -173,18 +164,23 @@ The root of each user's Merkle tree is anchored by the genesis block. Both the g
 
 ## 3. Security Properties
 
-### 3.1 DDoS Resistance via Negative Feedback
+### 3.1 DDoS Resistance
 
-Bright-net reverses the cost asymmetry of traditional DDoS at the protocol level. The traditional SYN packet is replaced by a chain tip — a valid, signed, timestamped block that proves continuous existence. This is not free to produce.
+Bright-net provides DDoS resistance through three independent defences operating at different layers. Each layer handles a different class of attack, and together they eliminate the cost asymmetry that makes DDoS effective against traditional protocols.
 
-Beyond that, high-volume failed handshake attempts trigger a negative feedback loop:
+**Layer 1 — QUIC Retry (transport layer, IP-spoofing filter)**
 
-- The protocol monitors handshake request rates and verification outcomes for each avatar
-- Successful, verified handshakes don't count toward rate-limit penalties — only failed verification attempts matter
-- When abnormal failed-verification rates are detected, connection establishment is progressively slowed for that avatar
-- The attacker's effective throughput decreases, creating diminishing returns until the attack becomes ineffective
+QUIC's built-in Retry mechanism (RFC 9000 §8.1) forces any initiator to prove their source IP is reachable before the responder allocates any handshake state. The responder issues a Retry packet containing a token bound to the connection attempt; the initiator must include this token in their first fully-formed packet. A host with a spoofed source address can't receive the Retry and therefore can't complete the exchange. This filters volumetric UDP floods at the transport layer for free — Bright-net inherits this by running over QUIC.
 
-This creates an oscillating pattern that's detectable via Fast Fourier Transform (FFT). Legitimate traffic exhibits high-entropy, chaotic patterns. DDoS traffic, forced into oscillation by the feedback loop, exhibits low-entropy periodic signals. FFT analysis separates these frequency components automatically.
+**Layer 2 — Proof-of-Continuity (application layer, Sybil / freshchain filter)**
+
+Every handshake requires a valid chain tip: a signed, timestamped block linked to a continuous history. This is not free to produce. Building a chain with six months of history requires six months of real elapsed time, regardless of computational power. An attacker flooding the network with valid handshakes must therefore maintain a large portfolio of aged avatar chains — the cost scales linearly with sustained attack volume and can't be parallelized or accelerated. This turns large-scale sustained attacks into prohibitively expensive infrastructure projects.
+
+**Layer 3 — Rate Limiter (application layer, failure-rate filter)**
+
+Failed handshake verifications trigger per-avatar exponential backoff. The first failure incurs a short cooldown; each subsequent failure within the tracking window doubles the delay, up to a configurable maximum. Successful handshakes reset the counter. An attacker who can't produce valid chain tips — or who rotates through fresh, unaged chains — burns through attempts quickly and finds themselves progressively throttled with diminishing returns.
+
+Together, these three layers address IP spoofing, freshchain flooding, and brute-force verification attempts without requiring the application to maintain any per-connection cookie state.
 
 ### 3.2 Sybil Resistance
 
