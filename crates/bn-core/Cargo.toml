@@ -1,0 +1,32 @@
+[package]
+name = "bn-core"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-All-Rights-Reserved"
+
+[dependencies]
+# Ed25519 digital signatures
+ed25519-dalek = { version = "2", features = ["rand_core"] }
+# Cryptographically secure random number generation
+rand = "0.8"
+# SHA-256 hashing
+sha2 = "0.10"
+# BLAKE2 hashing (faster alternative to SHA-256)
+blake2 = "0.10"
+# ChaCha20-Poly1305 authenticated encryption
+chacha20poly1305 = "0.10"
+# Serialization (serde is Rust's universal serialization framework, like zod but for encoding)
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Hex encoding/decoding
+hex = { version = "0.4", features = ["serde"] }
+# Timestamp handling
+chrono = { version = "0.4", features = ["serde"] }
+# Ergonomic error types (like a typed Error class hierarchy)
+thiserror = "1"
+# For zeroizing sensitive key material from memory on drop
+zeroize = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+# Pretty test assertions
+pretty_assertions = "1"

@@ -1,0 +1,17 @@
+[package]
+name = "bn-handshake"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-All-Rights-Reserved"
+
+[dependencies]
+bn-core = { path = "../bn-core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = "0.4"
+chrono = { version = "0.4", features = ["serde"] }
+thiserror = "1"
+rand = "0.8"
+
+[dev-dependencies]
+pretty_assertions = "1"

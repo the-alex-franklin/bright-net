@@ -1,0 +1,25 @@
+[package]
+name = "bn-shards"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-All-Rights-Reserved"
+
+[dependencies]
+# Shamir's Secret Sharing implementation
+sharks = { version = "0.5", features = ["std"] }
+# ChaCha20-Poly1305 for encrypting shards at rest
+chacha20poly1305 = "0.10"
+# Argon2id for deriving shard encryption keys from PIN + biometric factors
+argon2 = "0.5"
+rand = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+hex = { version = "0.4", features = ["serde"] }
+base64 = "0.22"
+thiserror = "1"
+zeroize = { version = "1", features = ["derive"] }
+# bn-core for shared types
+bn-core = { path = "../bn-core" }
+
+[dev-dependencies]
+pretty_assertions = "1"

@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "crates/bn-core",
+    "crates/bn-shards",
+    "crates/bn-handshake",
+]
+resolver = "2"
