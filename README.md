@@ -282,21 +282,17 @@ Mitigation: higher shard counts, geographically separated backups, trusted conta
 
 ### 6.3 Compromised IoT Devices (Aged Sybil Variant)
 
-It's highly recommended that IoT devices don't hold shards. A sophisticated attacker could compromise IoT devices that have been maintaining legitimate avatar chains for months. However, such attacks remain detectable via behavioral analysis and FFT.
+It's highly recommended that IoT devices don't hold shards. A sophisticated attacker could compromise IoT devices that have been maintaining legitimate avatar chains for months.
 
 ### 6.4 Initial Bootstrap and New User Onboarding
 
-New users with no chain history can't prove continuity because they have none. The protocol handles this through genesis block creation and optional invitation mechanisms from existing trusted entities. New chains aren't rejected — the protocol is permissionless — but their lack of temporal depth is observable.
+New users with no chain history are fully supported. The protocol is permissionless — a new chain is created at registration and immediately functional. Lack of temporal depth isn't a disqualifier, it's just a starting point. Trust accrues over time as the chain grows. Existing trusted entities can optionally accelerate this through invitation mechanisms, but it isn't required. A new account on Bright-net is no different than a new account anywhere else — it just hasn't had time to prove anything yet.
 
 ### 6.5 Storage Management and Chain Pruning
 
 Avatar chains grow continuously. Mitigation strategies include Merkle tree compression, checkpointing, and distributed archival. Proving continuity doesn't require the entire historical chain — only the ability to cryptographically link the current state back to a trusted checkpoint or genesis block.
 
-### 6.6 Infrastructure Security
-
-The home server requires appropriate hardening: firmware integrity, physical security, network isolation, and continuous monitoring. Infrastructure security remains a shared responsibility between the protocol design, hardware manufacturers, and the user.
-
-### 6.7 Cryptographic Assumptions
+### 6.6 Cryptographic Assumptions
 
 Bright-net relies on the same cryptographic primitives as the broader internet. Transitioning to post-quantum cryptography as standards mature is straightforward and would benefit all internet protocols equally.
 
@@ -308,7 +304,7 @@ Bright-net relies on the same cryptographic primitives as the broader internet. 
 
 **Advantages:** Eliminates password-based authentication, DDoS resistance via self-regulating negative feedback, privacy by architecture, you own the infrastructure.
 
-**Trade-offs:** Requires home server infrastructure, shard loss can be catastrophic, not backward-compatible with existing protocols.
+**Trade-offs:** Multiple shard loss can be catastrophic, not backward-compatible with existing protocols.
 
 ### 7.2 Tor / Dark Net
 
@@ -341,7 +337,6 @@ The protocol operates as an overlay network on top of existing internet infrastr
 
 ### 8.3 Adoption Pathway
 
-- **Open source from day one:** Permissive licensing (MIT/Apache)
 - **User benefits:** Elimination of passwords, user ownership of infrastructure and data
 - **Interoperability:** Bridges to the existing internet where possible
 - **Developer ecosystem:** SDKs, documentation, examples
