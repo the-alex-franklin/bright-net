@@ -79,7 +79,7 @@ Bright-net doesn't need heuristics for the problems it solves because the verifi
 
 ### 1.5 Beyond the Liberty-Security Trade-off
 
-Network architecture has historically assumed you must sacrifice privacy for security — a false dichotomy that goes back to political philosophy and Hobbes' Leviathan from 1651.
+Network architecture has historically assumed you must sacrifice privacy for security — a false dichotomy that goes back to the political philosophy of Hobbes' Leviathan from 1651.
 
 As Conor Gearty observes in 'Escaping Hobbes' (2010), this framework creates systems 'too consumed with security' at the expense of liberty. But here's the thing: this trade-off isn't fundamental. It's an artifact of pre-cryptographic times.
 
