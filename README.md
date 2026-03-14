@@ -83,7 +83,7 @@ Network architecture has historically assumed you must sacrifice privacy for sec
 
 As Conor Gearty observes in 'Escaping Hobbes' (2010), this framework creates systems 'too consumed with security' at the expense of privacy. But here's the thing: this trade-off isn't fundamental. It's an artifact of pre-cryptographic times.
 
-Bright-net inverts this. Each connection requires a verifiable block on the avatar chain. When initiating a handshake, your avatar claims 'I stamped a valid block for this connection.' The recipient verifies: does the block exist? Is the signature valid? Is the timestamp legitimate? Verifiable claims proceed; unverifiable claims get rejected.
+The bright-net model offers both. Each connection requires a verifiable block on the avatar chain. When initiating a handshake, your avatar claims 'I stamped a valid block for this connection.' The recipient verifies: does the block exist? Is the signature valid? Is the timestamp legitimate? Verifiable claims proceed; unverifiable claims get rejected.
 
 The system can't verify what didn't happen — only what did. This creates a default-deny architecture: without proof of continuous existence, connections fail. Attackers trying to flood connections without stamping blocks face repeated verification failures, effectively rate-limiting themselves through unverifiable claims.
 
