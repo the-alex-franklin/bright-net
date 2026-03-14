@@ -81,7 +81,7 @@ Bright-net doesn't need heuristics for the problems it solves because the verifi
 
 Network architecture has historically assumed you must sacrifice privacy for security — a false dichotomy that goes back to the political philosophy of Hobbes' Leviathan from 1651.
 
-As Conor Gearty observes in 'Escaping Hobbes' (2010), this framework creates systems 'too consumed with security' at the expense of liberty. But here's the thing: this trade-off isn't fundamental. It's an artifact of pre-cryptographic times.
+As Conor Gearty observes in 'Escaping Hobbes' (2010), this framework creates systems 'too consumed with security' at the expense of privacy. But here's the thing: this trade-off isn't fundamental. It's an artifact of pre-cryptographic times.
 
 Bright-net inverts this. Each connection requires a verifiable block on the avatar chain. When initiating a handshake, your avatar claims 'I stamped a valid block for this connection.' The recipient verifies: does the block exist? Is the signature valid? Is the timestamp legitimate? Verifiable claims proceed; unverifiable claims get rejected.
 
