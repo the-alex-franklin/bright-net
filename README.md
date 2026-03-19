@@ -95,7 +95,7 @@ This additional network layer — cryptographic state verification between trans
 
 ### 2.1 Proof-of-Continuity Explained
 
-Unlike proof-of-work systems (Bitcoin, Ethereum) that use computational difficulty as a security mechanism, proof-of-continuity uses time intervals on network interactions. Here's the key insight: while you can speed up local block generation with better hardware, the rate of network handshakes — the security-critical operations — is bounded by time itself and can't be accelerated or parallelized. The lag to establish new network connections doesn't need to be prohibitively expensive. It just can't be free. Something around 1-10ms is enough of a time delay. For comparison: it takes about 40ms to blink.
+Unlike proof-of-work systems (Bitcoin, Ethereum) that use computational difficulty as a security mechanism, proof-of-continuity uses time intervals on network interactions. Here's the key insight: while you can speed up local block generation with better hardware, the rate of network handshakes — the security-critical operations — is bounded by time itself and can't be accelerated or parallelized. The lag to establish new network connections doesn't need to be prohibitively expensive, but it can't be free either. Something around 1-10ms is enough of a time delay. For comparison: it takes about 40ms to blink.
 
 Key properties:
 
