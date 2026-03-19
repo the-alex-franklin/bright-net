@@ -38,6 +38,18 @@ Bright-net refers to both the proof-of-continuity protocol described here and it
 
 ---
 
+## License
+
+This project is licensed under the [Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/).
+
+Copyright (c) 2026 Alex Andria Franklin
+
+You are free to use, share, and modify this work, even for commercial purposes, as long as you provide appropriate credit to Alex Andria Franklin.
+
+See the LICENSE file for full details.
+
+---
+
 ## 1. Why We Need This
 
 ### 1.1 How We Got Here
