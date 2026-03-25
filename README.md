@@ -18,7 +18,7 @@ So, I was in my car, and I receive a call from "my bank" — and I've been a sof
 >
 > **Him:** "... No I'm not."
 
-And then he hangs up the phone and I'm just sitting there fuming. And like, I'm already vaguely familiar with SS7, and the fact that VoIP is designed to trust easily-forged headers by default. And I'm just like "Why the fuck does the internet work this way in 2026?!..... yeah. Why does the internet work this way in 2026?"
+And then he hangs up the phone and I'm just sitting there fuming. And, I'm already vaguely familiar with SS7, and the fact that VoIP is designed to trust easily-forged headers by-default. And I'm just like "Why the fuck does the internet work this way in 2026?! ..... 💡 yeah. Why does the internet work this way in 2026?"
 
 Then I got to work.
 
