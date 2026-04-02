@@ -28,11 +28,11 @@ Then I did some research and I came up with this crazy idea.
 
 The internet we use today was designed in the 1970s for a small network of academics who trusted each other. Back then, you could take headers at face value, connection requests were handled optimistically, and nobody worried much about authentication. Fast forward to 2026, and we've got billions of users, but we're still stuck with an architecture that wasn't built for an adversarial world.
 
-This paper presents a different approach: an internet architecture based on proof-of-continuity — basically using the passage of real time instead of computational proof-of-work. By integrating blockchain handshakes at the transport layer, distributing continuity shards across devices you actually own, and enabling cryptographic verification that proves you've existed continuously over time, this protocol tackles several classes of attacks while giving data ownership back to individuals.
+This paper presents a different approach: an internet architecture based on proof-of-continuity. Basically using the passage of time instead of computational proof-of-work. By integrating blockchain handshakes at the transport layer, distributing continuity shards across devices you actually own, and enabling cryptographic verification that proves you've existed continuously over time, this protocol attempts to tackle several classes of attacks while giving data ownership back to individuals.
 
 **Important:** Bright-net is NOT a cryptocurrency. There are no tokens, no coins, no speculation, no financial instruments whatsoever. This is pure communication infrastructure. Think of it as a message-passing and continuity verification protocol that happens to use blockchain data structures for cryptographic verification — but that doesn't make it a cryptocurrency.
 
-**Important:** Bright-net does NOT replace the internet. It runs alongside it — an overlay, not a replacement. The public internet, the dark net, and Web3 will continue to exist exactly as they do now. Bright-net is a fourth option you can choose to use. This is intentional. A protocol that required everyone to abandon existing infrastructure would be both impractical and dangerous — a single network with a single point of control is exactly the kind of thing authoritarian systems exploit. Coexistence is a feature, not a limitation.
+**Important:** Bright-net is NOT intended to replace the internet. It runs alongside it — an overlay, not a replacement. The public internet, the dark net, and Web3 will continue to exist exactly as they do now. Bright-net is a fourth option you can choose to use when you want it. This is intentional. a single network with a single point of control is exactly the kind of thing authoritarian systems exploit. Coexistence is a feature, not a limitation.
 
 Bright-net refers to both the proof-of-continuity protocol described here and its reference implementation that manages avatar chains, shard distribution, and blockchain handshakes across your own devices.
 
@@ -54,7 +54,7 @@ See the LICENSE file for full details.
 
 ### 1.1 How We Got Here
 
-The internet's core protocols (TCP/IP, DNS, HTTP) were designed for a network where everyone knew each other. Think about it: in the '70s, if you were on ARPANET, you probably had coffee with half the people on the network. Headers could be believed, connection requests got optimistic treatment, and authentication happened through institutional relationships rather than cryptography.
+The internet's core protocols (TCP/IP, DNS, HTTP) were designed for a network where everyone knew each other. Think about it: in the '70s, if you were on ARPANET, you probably got coffee with half the people on the network. Headers could be believed, connection requests got optimistic treatment, and authentication happened through institutional relationships rather than cryptography.
 
 Then the network grew to billions of users. We added security layers incrementally: TLS for encryption, DNSSEC for DNS validation, various authentication protocols. These helped, but they're basically band-aids on protocols that were never designed with adversaries in mind. And that creates fundamental limits on what trust models are even possible.
 
@@ -67,7 +67,7 @@ Most people today rely on centralized services for pretty much everything:
 - Software increasingly comes as subscriptions rather than products you own
 - Your personal devices are often glorified thin clients to the cloud
 
-This model works — it's economically successful and operationally convenient. It enables rapid scaling and reduces technical barriers. But it also concentrates control over data, identity, and computational resources in the hands of platform operators. You're dependent on them, and your autonomy is limited.
+The existing model has worked for decades. it's economically successful and operationally convenient. It enables rapid scaling and reduces technical barriers. But it also concentrates control over data, identity, and computational resources in the hands of platform operators. You're dependent on them, and your autonomy is limited.
 
 ### 1.3 What Goes Wrong
 
@@ -89,11 +89,9 @@ Heuristics aren't a solution. They're an accommodation to a broken foundation.
 
 Bright-net doesn't need heuristics for the problems it solves because the verification is cryptographic, not probabilistic. Either the chain tip is valid or it isn't. Either the handshake verifies or it aborts. No guessing, no pattern matching, no "this looks like a bot." The architecture produces certainty where the current internet produces estimates.
 
-### 1.5 Beyond the Liberty-Security Trade-off
+### 1.5 Beyond the Privacy vs. Security Trade-off
 
-Network architecture has historically assumed you must sacrifice privacy for security — a false dichotomy that goes back to the political philosophy of Hobbes' Leviathan from 1651.
-
-As Conor Gearty observes in 'Escaping Hobbes' (2010), this framework creates systems 'too consumed with security' at the expense of privacy. But here's the thing: this trade-off isn't fundamental. It's an artifact of pre-cryptographic times.
+Network architecture has historically assumed you must sacrifice privacy for security. A false dichotomy that goes back to the political philosophy of Hobbes' Leviathan from 1651. It has been disproven many times since then.
 
 The bright-net model offers both. Each connection requires a verifiable block on the avatar chain. When initiating a handshake, your avatar claims 'I stamped a valid block for this connection.' The recipient verifies: does the block exist? Is the signature valid? Is the timestamp legitimate? Verifiable claims proceed; unverifiable claims get rejected.
 
@@ -396,8 +394,4 @@ The question isn't whether such a system is possible — it is. The question is 
 
 **Sybil attack:** An attack where an adversary creates many fake identities to gain disproportionate influence or overwhelm a system.
 
----
 
-## References
-
-Gearty, C. (2010). *Escaping Hobbes: Liberty and Security for Our Democratic (Not Anti-Terrorist) Age.* LSE Law, Society and Economy Working Papers, 3/2010. London School of Economics and Political Science.
