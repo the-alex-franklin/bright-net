@@ -1,4 +1,4 @@
-let me caveat this by saying: I don't know if it'll work. But I keep checking with ChatGPT and Claude "Is this possible? Does it have any paradoxes or logical fallacies that make it flawed?" and they keep saying "it's possible. That doesn't mean it'll be easy or automatically sucessful, but it's possible", so I'm still pushing on the idea
+let me caveat this by saying: I don't know if it'll work, but I keep checking with ChatGPT and Claude "Is this possible? Does it have any paradoxes or logical fallacies that make it flawed?" and they keep saying "it's possible. That doesn't mean it'll be easy or automatically sucessful, but it's possible", so I'm still pushing on the idea
 
 # Bright-net: Proof-of-Continuity Protocol
 
