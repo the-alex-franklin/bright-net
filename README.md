@@ -32,7 +32,7 @@ This paper presents a different approach: an internet architecture based on proo
 
 **Important:** Bright-net is NOT a cryptocurrency. There are no tokens, no coins, no speculation, no financial instruments whatsoever. This is pure communication infrastructure. Think of it as a message-passing and continuity verification protocol that happens to use blockchain data structures for cryptographic verification — but that doesn't make it a cryptocurrency.
 
-**Important:** Bright-net is NOT intended to replace the internet. It runs alongside it — an overlay, not a replacement. The public internet, the dark net, and Web3 will continue to exist exactly as they do now. Bright-net is a fourth option you can choose to use when you want it. This is intentional. a single network with a single point of control is exactly the kind of thing authoritarian systems exploit. Coexistence is a feature, not a limitation.
+**Important:** Bright-net is NOT an authoritarian surveillance-state thing. It's not intended to replace the internet. It runs alongside it. The public internet, the dark net, and Web3, will all continue to exist exactly as they do now. Bright-net would be a fourth option you can choose to use when you want it. This is intentional. A single network with a single point of control is exactly the kind of thing authoritarian systems exploit. Coexistence is a feature, not a limitation.
 
 Bright-net refers to both the proof-of-continuity protocol described here and its reference implementation that manages avatar chains, shard distribution, and blockchain handshakes across your own devices.
 
@@ -44,15 +44,13 @@ This project is licensed under the [Creative Commons Attribution 4.0 Internation
 
 Copyright (c) 2026 Alex Andria Franklin
 
-You are free to use, share, and modify this work, even for commercial purposes, as long as you provide appropriate credit to Alex Andria Franklin.
+You are free to use, share, and modify this work, even for commercial purposes, as long as you give me credit for coming up with the idea.
 
 See the LICENSE file for full details.
 
 ---
 
 ## 1. Why We Need This
-
-### 1.1 How We Got Here
 
 The internet's core protocols (TCP/IP, DNS, HTTP) were designed for a network where everyone knew each other. Think about it: in the '70s, if you were on ARPANET, you probably got coffee with half the people on the network. Headers could be believed, connection requests got optimistic treatment, and authentication happened through institutional relationships rather than cryptography.
 
@@ -64,10 +62,10 @@ Most people today rely on centralized services for pretty much everything:
 
 - Identity providers handle authentication and manage your credentials
 - Platform companies host your data and provide computational services
-- Software increasingly comes as subscriptions rather than products you own
 - Your personal devices are often glorified thin clients to the cloud
+- Deepfake scams are becoming more prevalent
 
-The existing model has worked for decades. it's economically successful and operationally convenient. It enables rapid scaling and reduces technical barriers. But it also concentrates control over data, identity, and computational resources in the hands of platform operators. You're dependent on them, and your autonomy is limited.
+The existing model has worked for decades. it's economically successful and operationally convenient. It enables rapid scaling and reduces technical barriers. But it also concentrates control over data, identity, and computational resources in the hands of platform operators. You're dependent on them, and your personal autonomy is limited.
 
 ### 1.3 What Goes Wrong
 
@@ -76,14 +74,14 @@ Several recurring problems emerge from the current architecture:
 - **Password-based authentication:** Shared secrets can be stolen, forgotten, or socially engineered. Users struggle to maintain unique strong passwords across dozens of services.
 - **DDoS vulnerability:** Stateless connection protocols make it practically impossible to distinguish legitimate traffic from attack traffic until you've already allocated resources.
 - **DNS as a trust anchor:** Name resolution functions as both a convenience layer and a security-critical component, making it a high-value target for attackers.
-- **Sybil resistance:** Creating new identities is basically free, enabling spam, manipulation, and coordinated inauthentic behavior at massive scale.
+- **Sybil resistance:** Creating new identities is free, enabling spam, manipulation, and coordinated inauthentic behavior at massive scale.
 - **Data portability:** Your data is often locked within platform-specific formats and APIs, making migration between services technically complex.
 
 Bright-net explores whether different architectural choices could address these limitations while maintaining or improving usability and security.
 
 ### 1.4 Heuristics vs. Proof
 
-The security industry's response to these problems has been heuristics — pattern matching, behavioral analysis, anomaly detection, reputation scoring. "This traffic looks suspicious, block it." "This login is from an unusual location, challenge it." These are educated guesses at scale, and they're the best the current architecture allows. They work well enough to keep the internet functional, but they're fundamentally probabilistic. They can be fooled, tuned around, and evaded by anyone patient enough to study the patterns.
+The security industry's response to these problems has been heuristics — pattern matching, behavioral analysis, anomaly detection, reputation scoring. "This traffic looks suspicious, block it", "This login is from an unusual location, challenge it." These are educated guesses at scale, and they're the best the current architecture allows. They work well enough to keep the internet functional, but they're fundamentally probabilistic. They can be fooled, tuned around, and evaded by anyone patient enough to study the patterns.
 
 Heuristics aren't a solution. They're an accommodation to a broken foundation.
 
@@ -91,17 +89,17 @@ Bright-net doesn't need heuristics for the problems it solves because the verifi
 
 ### 1.5 Beyond the Privacy vs. Security Trade-off
 
-Network architecture has historically assumed you must sacrifice privacy for security. A false dichotomy that goes back to the political philosophy of Hobbes' Leviathan from 1651. It has been disproven many times since then.
+Network architecture has historically assumed you must sacrifice privacy for security. A false dichotomy that goes back to the political philosophy of Hobbes' Leviathan from 1651. It has been disproven many times since. Here's where I disprove it again.
 
-The bright-net model offers both. Each connection requires a verifiable block on the avatar chain. When initiating a handshake, your avatar claims 'I stamped a valid block for this connection.' The recipient verifies: does the block exist? Is the signature valid? Is the timestamp legitimate? Verifiable claims proceed; unverifiable claims get rejected.
+Each connection requires a verifiable block on your avatar chain. When initiating a handshake, your avatar claims 'I stamped a valid block for this connection.' The recipient verifies: does the block exist? Is the signature valid? Is the timestamp legitimate? Verifiable claims proceed; unverifiable claims get rejected.
 
-The system can't verify what didn't happen — only what did. This creates a default-deny architecture: without proof of continuous existence, connections fail. Attackers trying to flood connections without stamping blocks face repeated verification failures, effectively rate-limiting themselves through unverifiable claims.
+The system can't verify what didn't happen. This creates a default-deny architecture: without proof of continuous existence, connections fail. Attackers trying to flood connections without stamping blocks face repeated verification failures, effectively rate-limiting themselves through unverifiable claims.
 
-This additional network layer — cryptographic state verification between transport and application — enables both privacy AND security simultaneously. It's analogous to how TLS added encryption without replacing TCP/IP.
+This additional network layer — cryptographic state verification between transport and application — enables both privacy and security simultaneously. It's analogous to how TLS added encryption without replacing TCP/IP.
 
 ---
 
-## 2. How It Actually Works
+## 2. How It Works
 
 ### 2.1 Proof-of-Continuity Explained
 
@@ -112,7 +110,7 @@ Key properties:
 - Network handshakes must occur sequentially and are rate-limited by protocol feedback mechanisms
 - Each handshake requires cryptographic verification of chain continuity from previous interactions
 - Attempting to establish connections too rapidly triggers negative feedback
-- The time interval is on interaction frequency, not computational speed — a chain showing six months of activity can't be created instantly regardless of your hardware
+- The time interval is on interaction frequency, not computational speed. A chain showing six months of activity can't be created instantly regardless of your hardware
 
 This eliminates the energy waste of proof-of-work mining while providing Sybil resistance through time intervals rather than computational expenditure.
 
@@ -122,7 +120,7 @@ A QUIC/TLS tunnel replaces the traditional TCP three-way handshake with a two-me
 
 **Step 1: TLS Tunnel Establishment (via QUIC)**
 
-You and whoever you're connecting to establish an encrypted QUIC/TLS tunnel. This provides confidentiality for all subsequent steps and activates QUIC's built-in Retry mechanism. Before any application state is allocated, QUIC sends a Retry packet that forces the initiator to prove their source IP is reachable — eliminating spoofed-source floods at the transport layer for free, as specified in RFC 9000 §8.1.
+You and whoever you're connecting to establish an encrypted QUIC/TLS tunnel. This provides confidentiality for all subsequent steps and activates QUIC's built-in Retry mechanism. Before any application state is allocated, QUIC sends a Retry packet that forces the initiator to prove their source IP is reachable, eliminating spoofed-source floods at the transport layer for free, as specified in RFC 9000 §8.1.
 
 **Step 2: Chain Tip Exchange**
 
