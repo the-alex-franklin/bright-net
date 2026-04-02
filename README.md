@@ -266,11 +266,11 @@ Bright-net provides a third path between complete anonymity and complete transpa
 
 ### 6.1 Biometric Compromise
 
-Shard decryption relies on a composite of multiple local factors. An attacker who obtains your thumbprint, or your PIN, or your device in isolation cannot decrypt a shard. Even with a fully compromised device, they have only one shard — insufficient to reconstruct the root without reaching the threshold across multiple devices.
+Shard decryption relies on a composite of multiple local factors. An attacker who obtains just your thumbprint or just your device, cannot decrypt a shard. Even with a fully compromised device, they have only one shard. Insufficient to reconstruct the root without reaching the threshold across multiple devices.
 
 ### 6.2 Shard Loss and Irrecoverability
 
-If you lose access to 3 or more shards (below the reconstruction threshold), your avatar is permanently inaccessible. There's no customer support, no account recovery flow. This is both a feature and a risk — true ownership means true responsibility.
+If you lose access to 3 or more shards, your avatar is permanently inaccessible. There's no customer support, no account recovery flow. This is both a feature and a risk. True ownership means true responsibility.
 
 Mitigation: higher shard counts, geographically separated backups, trusted contacts holding encrypted backup shards.
 
@@ -280,7 +280,7 @@ It's highly recommended that IoT devices don't hold shards. IoT devices are noto
 
 ### 6.4 Initial Bootstrap and New User Onboarding
 
-New users with no chain history are fully supported. The protocol is permissionless — a new chain is created at registration and immediately functional. Lack of temporal depth isn't a disqualifier, it's just a starting point. Trust accrues over time as the chain grows. Existing trusted entities can optionally accelerate this through invitation mechanisms, but it isn't required. A new account on Bright-net is no different than a new account anywhere else — it just hasn't had time to prove anything yet.
+New users with no chain history are fully supported. The protocol is permissionless. A new chain is created at registration and immediately functional. Lack of temporal depth isn't a disqualifier. It's just a starting point. Trust accrues over time as the chain grows. A new account on Bright-net is no different than a new account anywhere else — it just hasn't had time to prove anything yet.
 
 ### 6.5 Storage Management and Chain Pruning
 
@@ -305,7 +305,6 @@ Tor provides maximum anonymity but no persistent identity. Bright-net provides c
 - **Proof-of-work waste:** Bright-net uses time as the constraint.
 - **Financialization:** No native token or financial layer.
 - **Public ledgers:** Bright-net uses private chains with cryptographic privacy guarantees.
-- **Usability:** Designed for seamless integration via biometric plus software-managed complexity.
 
 ---
 
