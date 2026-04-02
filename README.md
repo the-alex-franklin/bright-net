@@ -2,7 +2,7 @@
 
 **A Decentralized Internet Architecture for Cryptographic Trust**
 
-*Alex Andria Franklin — White Paper v1.1.0*
+*Alex Andria Franklin — v1.1.0*
 
 ---
 
@@ -363,8 +363,6 @@ The question isn't whether such a system is possible — it is. The question is 
 **Double ratchet:** A cryptographic mechanism (from the Signal Protocol) that advances key material with each message exchange, ensuring forward secrecy.
 
 **Ephemeral keys:** Public keys generated for a single session or block that expire after use or timeout.
-
-**FFT (Fast Fourier Transform):** A mathematical technique for analyzing frequency components in a signal. Used to distinguish legitimate high-entropy traffic from periodic DDoS patterns.
 
 **Forward secrecy:** The property that compromising current keys doesn't enable decryption of past communications.
 
