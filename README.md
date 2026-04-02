@@ -164,7 +164,7 @@ The root of each user's Merkle tree is anchored by the genesis block. Both the g
 - You can lose up to two devices and still maintain access
 - Thresholds are configurable: 2-of-3, 4-of-7, 5-of-9, etc.
 
-**Biometric Access:** Each shard is encrypted with a key derived from a composite of multiple local factors: something you are (fingerprint, face scan), something you know (PIN), and something you have (the device itself). No single factor is sufficient. None of this ever leaves the device.
+**Biometric Access:** Each shard is encrypted with a key derived from a composite of multiple local factors: something you are (fingerprint, face scan) and something you have (the device itself). No single factor is sufficient. None of this ever leaves the device.
 
 **Device Pairing:** To add a new device, you provide your biometric on both the new device and an existing shard holder. The devices perform a blockchain handshake to verify they belong to the same root, then generate and distribute a new shard.
 
@@ -176,19 +176,19 @@ The root of each user's Merkle tree is anchored by the genesis block. Both the g
 
 ### 3.1 DDoS Resistance
 
-Bright-net provides DDoS resistance through three independent defences operating at different layers. Each layer handles a different class of attack, and together they eliminate the cost asymmetry that makes DDoS effective against traditional protocols.
+Bright-net inverts the cost asymmetry of DDoS attacks through three independent defences operating at different layers. Each layer handles a different class of attack.
 
-**Layer 1 — QUIC Retry (transport layer, IP-spoofing filter)**
+**Layer 1 — QUIC Retry (IP-spoofing filter)**
 
 QUIC's built-in Retry mechanism (RFC 9000 §8.1) forces any initiator to prove their source IP is reachable before the responder allocates any handshake state. The responder issues a Retry packet containing a token bound to the connection attempt; the initiator must include this token in their first fully-formed packet. A host with a spoofed source address can't receive the Retry and therefore can't complete the exchange. This filters volumetric UDP floods at the transport layer for free — Bright-net inherits this by running over QUIC.
 
-**Layer 2 — Proof-of-Continuity (application layer, Sybil / freshchain filter)**
+**Layer 2 — Proof-of-Continuity (Sybil resistance)**
 
 Every handshake requires a valid chain tip: a signed, timestamped block linked to a continuous history. This is not free to produce. Building a chain with six months of history requires six months of real elapsed time, regardless of computational power. An attacker flooding the network with valid handshakes must therefore maintain a large portfolio of aged avatar chains — the cost scales linearly with sustained attack volume and can't be parallelized or accelerated. This turns large-scale sustained attacks into prohibitively expensive infrastructure projects.
 
-**Layer 3 — Rate Limiter (application layer, failure-rate filter)**
+**Layer 3 — Rate Limiter (failure-rate filter)**
 
-Failed handshake verifications trigger per-avatar exponential backoff. The first failure incurs a short cooldown; each subsequent failure within the tracking window doubles the delay, up to a configurable maximum. Successful handshakes reset the counter. An attacker who can't produce valid chain tips — or who rotates through fresh, unaged chains — burns through attempts quickly and finds themselves progressively throttled with diminishing returns.
+Failed handshake verifications trigger exponential backoff. The first failure incurs a short cooldown; each subsequent failure within the tracking window exponentiates the delay, up to a configurable maximum. Successful handshakes reset the counter. An attacker who can't produce valid chain tips — or who rotates through fresh, unaged chains — burns through attempts quickly and finds themselves progressively throttled with diminishing returns.
 
 Together, these three layers address IP spoofing, freshchain flooding, and brute-force verification attempts without requiring the application to maintain any per-connection cookie state.
 
@@ -198,12 +198,11 @@ Creating a single avatar requires minimal computational effort, but creating tho
 
 - New avatars have no history and can be rate-limited or treated with higher scrutiny
 - Building history takes real time — a six-month-old chain requires six months to create, regardless of computational resources
-- Behavioral patterns are detectable via FFT-based analysis
-- Human attention is limited — one person, one pair of eyeballs
+- Human attention is limited — one person can realistically only use 2 or 3 devices simultaneously
 
 ### 3.3 Forward Secrecy and Ephemeral Keys
 
-The recursive double-ratchet factory ensures forward secrecy: compromising current session keys doesn't enable decryption of past communications. Each block in an avatar chain includes ephemeral public keys that expire after use or timeout.
+A double-ratchet mechanism ensures forward secrecy: compromising current session keys doesn't enable decryption of past communications. Each block in an avatar chain includes ephemeral public keys that expire after use or timeout.
 
 Avatar chains are read-only from an external perspective. Historical blocks contain cryptographic hashes of interactions, not the interaction content itself. You can't decrypt past communications — only verify that they occurred.
 
@@ -215,7 +214,7 @@ Similarly, IP addresses become purely routing information. An avatar can connect
 
 ---
 
-## 4. Distributed Infrastructure and Personal AI
+## 4. Distributed Infrastructure
 
 ### 4.1 Your Router is Already the Anchor
 
@@ -231,18 +230,6 @@ For users who want to go further, the protocol supports a shift toward home-cent
 
 This model eliminates the need for expensive cloud subscriptions for personal compute. You own the hardware, run your own services, and pay only the electricity cost. But this is the vision, not the requirement. The protocol works today with the router you already have.
 
-### 4.2 (Optional) Personal AI as Avatar Manager
-
-Running continuously on the home server is a personal AI agent that manages your avatar presence:
-
-- **Connection management:** Maintains active connections, responds to handshake requests, coordinates across devices
-- **Security monitoring:** Detects anomalous device behavior and alerts you
-- **Shard coordination:** Manages shard distribution, handles device pairing, automates redistribution
-
-The personal AI isn't a separate entity — it's an extension of you, running on hardware you control with your authority. Infrastructure that enables your agency, not a peer entity.
-
----
-
 ## 5. What This Enables
 
 ### 5.1 Login for the Last Time Ever
@@ -254,18 +241,17 @@ Bright-net eliminates passwords entirely:
 - No passwords to forget, steal, or phish
 - No 'forgot password' flows or account recovery procedures
 
-Your avatar chain IS your credential.
+Rather than asking for a passkey from an app, you give a passkey to them.
 
 *(Caveat: You may still log out if desired. Your avatars will effectively "disappear" from the internet while your router is offline, and reappear when it comes back on.)*
 
 ### 5.2 Privacy by Architecture
 
-Privacy isn't a policy or a promise — it's structurally enforced by the protocol:
+Privacy isn't a policy or a promise. it's structurally enforced by the protocol:
 
 - **Cryptographic fragmentation:** Your data is sharded across devices you control. No central aggregation point exists.
 - **Avatar compartmentalization:** Multiple avatars can't be linked without the assembled genesis block.
 - **Write-only chains:** Historical interaction content isn't preserved in recoverable form.
-- **No metadata harvesting:** No platform accumulates behavioral data.
 
 ### 5.3 Accountability Through Protocol Design
 
@@ -292,7 +278,7 @@ Mitigation: higher shard counts, geographically separated backups, trusted conta
 
 ### 6.3 Compromised IoT Devices (Aged Sybil Variant)
 
-It's highly recommended that IoT devices don't hold shards. A sophisticated attacker could compromise IoT devices that have been maintaining legitimate avatar chains for months.
+It's highly recommended that IoT devices don't hold shards. IoT devices are notoriously insecure. A sophisticated attacker could compromise IoT devices that have been maintaining legitimate avatar chains for months.
 
 ### 6.4 Initial Bootstrap and New User Onboarding
 
@@ -301,10 +287,6 @@ New users with no chain history are fully supported. The protocol is permissionl
 ### 6.5 Storage Management and Chain Pruning
 
 Avatar chains grow continuously. Mitigation strategies include Merkle tree compression, checkpointing, and distributed archival. Proving continuity doesn't require the entire historical chain — only the ability to cryptographically link the current state back to a trusted checkpoint or genesis block.
-
-### 6.6 Cryptographic Assumptions
-
-Bright-net relies on the same cryptographic primitives as the broader internet. Transitioning to post-quantum cryptography as standards mature is straightforward and would benefit all internet protocols equally.
 
 ---
 
@@ -322,8 +304,8 @@ Tor provides maximum anonymity but no persistent identity. Bright-net provides c
 
 ### 7.3 Cryptocurrency / Web3
 
-- **Proof-of-work waste:** Bright-net uses time as the constraint — free and impossible to parallelize.
-- **Financialization:** No native token or financial layer — pure infrastructure.
+- **Proof-of-work waste:** Bright-net uses time as the constraint.
+- **Financialization:** No native token or financial layer.
 - **Public ledgers:** Bright-net uses private chains with cryptographic privacy guarantees.
 - **Usability:** Designed for seamless integration via biometric plus software-managed complexity.
 
@@ -339,7 +321,7 @@ Tor provides maximum anonymity but no persistent identity. Bright-net provides c
 - **Key derivation:** Double ratchet mechanism (Signal Protocol)
 - **Secret sharing:** Shamir's Secret Sharing
 
-The protocol doesn't invent new cryptography — it composes existing primitives in a novel architecture.
+The protocol doesn't invent new cryptography. It composes existing primitives in a novel architecture.
 
 ### 8.2 Network Topology
 
@@ -347,7 +329,7 @@ The protocol operates as an overlay network on top of existing internet infrastr
 
 ### 8.3 Adoption Pathway
 
-- **User benefits:** Elimination of passwords, user ownership of infrastructure and data
+- **User benefits:** Elimination of passwords, as well as user ownership of infrastructure and data
 - **Interoperability:** Bridges to the existing internet where possible
 - **Developer ecosystem:** SDKs, documentation, examples
 - **Viral growth:** Users invite trusted contacts
