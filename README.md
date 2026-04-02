@@ -1,4 +1,6 @@
-let me caveat this by saying: I don't know if it'll work, but I keep checking with ChatGPT and Claude "Is this possible? Does it have any paradoxes or logical fallacies that make it flawed?" and they keep saying "it's possible. That doesn't mean it'll be easy or automatically sucessful, but it's possible", so I'm still pushing on the idea
+let me caveat this by saying: I don't know if it'll work, but I keep checking with ChatGPT and Claude "Is this possible? Does it have any paradoxes or logical fallacies that make it flawed?" and they keep saying "it's possible. That doesn't mean it'll be easy or automatically sucessful, but it's possible", so I'm still pushing on the idea. And then they point out some of the flaws, but it keeps coming down to me explaining poorly.
+
+Chain age doesn't matter. Anybody can have a fresh-chain or an aged-chain and use the bright-net like normal user. It's that, once someone starts DDoS'ing, then they're accruing many failed network handshake blocks very rapidly, which is what throttles down their hand-shake initiation rate
 
 # Bright-net: Proof-of-Continuity Protocol
 
@@ -12,7 +14,7 @@ let me caveat this by saying: I don't know if it'll work, but I keep checking wi
 
 So, I was in my car, and I receive a call from "my bank", and I've been a software developer for about a decade, and I've been through this scam dozens of times before. So I just let it ring through. He calls again. That's twice. He should move on now. And then he calls again, and I start getting irritated, but I let it ring through. He calls a 4th time, so I pick up the phone and I just scream at him:
 
-> **Me:** "Will you shut the hell up!?"
+> **Me:** "Will you shut up!?"
 >
 > **Him:** "Umm... what?"
 >
@@ -91,7 +93,7 @@ Bright-net doesn't need heuristics for the problems it solves because the verifi
 
 ### 1.5 Beyond the Privacy vs. Security Trade-off
 
-Network architecture has historically assumed you must sacrifice privacy for security. A false dichotomy that goes back to the political philosophy of Hobbes' Leviathan from 1651. It has been disproven many times since. Here's where I disprove it again.
+Network architecture has historically assumed you must sacrifice privacy for security. A false dichotomy that goes back to the political philosophy of Hobbes' Leviathan from 1651. It has been disproven many times since.
 
 Each connection requires a verifiable block on your avatar chain. When initiating a handshake, your avatar claims 'I stamped a valid block for this connection.' The recipient verifies: does the block exist? Is the signature valid? Is the timestamp legitimate? Verifiable claims proceed; unverifiable claims get rejected.
 
