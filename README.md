@@ -11,11 +11,11 @@ Me: "Will you shut the fuck up?!"
 
 Him: "Umm... what?"
 
-Me: "I know who you are. I know what you're doing. This is a hack that's so simple it barely qualifies as a hack anymore! Leave me alone."
+Me: "I know who you are. I know what you're doing. This is a hack that's so simple it barely qualifies as a hack anymore! Leave. me. alone."
 
-Him: "...No I'm not."
+Him: "... No I'm not."
 
-Then he hangs up. And I'm sitting there fuming. And I'm already vaguely familiar with SS7 and the fact that VoIP and HTTP were designed to trust easily-forged headers by default. And I'm thinking: "😡 why does the internet work this way in 2026?! ...... 💡 yeah, why _does_ the internet work this way in 2026?"
+Then he hangs up. And I'm sitting there fuming. (And I'm already vaguely familiar with SS7 and the fact that VoIP and HTTP were designed to trust easily-forged headers by default). And I'm sitting there, fuming: "😡 why does the internet work this way in 2026?! ...... 💡 yeah, why _does_ the internet work this way in 2026?"
 
 ---
 
