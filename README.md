@@ -21,7 +21,7 @@ Then he hangs up. And I'm sitting there fuming. (And I'm already vaguely familia
 
 ## The Problem
 
-The default Transmission Control Protocol that was still use today was defined in the 1975, when the internet was still called the ARPANET. Connection requests got optimistic treatment, because there were only like, 12 people on the network at the time, and half of them probably got coffee together. Headers could be believed, and authentication happened through institutional relationships rather than cryptography. Then the network grew to billions of users, but we're still stuck with an architecture that wasn't built for an adversarial world.
+The default Transmission Control Protocol that was still use today was defined in the 1975, when the internet was still called the ARPANET. Connection requests got optimistic treatment, because there were only like, 12 people on the network at the time, and half of them probably got coffee together. Headers could be trusted by default, and authentication happened through institutional relationships rather than cryptography. Then the network grew to billions of users, but we're still stuck with an architecture that wasn't built for an adversarial world.
 
 The security industry's response has been heuristics — pattern matching, behavioral analysis, educated guesses at scale. Heuristics aren't a solution. They're an accommodation to a broken foundation.
 
@@ -43,9 +43,11 @@ Bright-net replaces the traditional TCP handshake with an interwoven blockchain 
 
 ## How the Handshake Works
 
+Verifying a chain tip is cheap. Just a signature check and a hash comparison. Creating a valid one requires the private key, the correct chain state, and most importantly, real elapsed time. You can't parallelize your way around the clock. This asymmetry is what makes the architecture self-defending: attacking someone at scale is orders of magnitude more expensive than defending against it.
+
 **Step 1 — TLS Tunnel Establishment (via QUIC)**
 
-A UDP/QUIC/TLS tunnel is established between both parties. UDP bypasses the SYN-ACK three-way handshake entirely. QUIC runs on top of it, folding connection establishment and TLS 1.3 encryption into a single round trip. QUIC's built-in Retry mechanism then forces the initiator to prove their source IP is reachable before any application state is allocated, filtering spoofed-source floods at the transport layer for free.
+An encrypted tunnel is established between both parties using UDP/QUIC/TLS. UDP bypasses the SYN-ACK three-way handshake entirely. QUIC runs on top of it, folding connection establishment and TLS 1.3 encryption into a single round trip. QUIC's built-in Retry mechanism then forces the initiator to prove their source IP is reachable before any application state is allocated, filtering spoofed-source floods at the transport layer for free.
 
 **Step 2 — Chain Tip Exchange**
 
