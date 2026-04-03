@@ -21,7 +21,7 @@ Then he hangs up. And I'm sitting there fuming. (And I'm already vaguely familia
 
 ## The Problem
 
-The default Transmission Control Protocol that was still use today was defined in the 1975, when the internet was still called the ARPANET. Connection requests got optimistic treatment, because there were only like, 12 people on the network at the time, and half of them probably all got coffee together. Headers could be believed, and authentication happened through institutional relationships rather than cryptography. Then the network grew to billions of users, but we're still stuck with an architecture that wasn't built for an adversarial world.
+The default Transmission Control Protocol that was still use today was defined in the 1975, when the internet was still called the ARPANET. Connection requests got optimistic treatment, because there were only like, 12 people on the network at the time, and half of them probably got coffee together. Headers could be believed, and authentication happened through institutional relationships rather than cryptography. Then the network grew to billions of users, but we're still stuck with an architecture that wasn't built for an adversarial world.
 
 The security industry's response has been heuristics — pattern matching, behavioral analysis, educated guesses at scale. Heuristics aren't a solution. They're an accommodation to a broken foundation.
 
