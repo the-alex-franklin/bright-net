@@ -94,7 +94,7 @@ Privacy isn't a policy or a promise. It's structurally enforced by the protocol.
 
 ## Avatars and Compartmentalization
 
-Your digital presence is organized as a Merkle tree. Multiple avatar chains fork from a single root — you might have separate avatars for work, gaming, shopping, or anonymous discussion. From the outside, each branch is independent. External parties only see the branch relevant to their interaction. Branches can't be linked together through the protocol layer.
+Your digital presence is organized as a Merkle tree of personas. Multiple avatar chains fork from a single root — you might have separate avatars for work, gaming, shopping, or anonymous discussion. From the outside, each branch is independent. External parties only see the branch relevant to their interaction. Branches can't be linked together through the protocol layer.
 
 Avatars are pseudonymous, not anonymous. Each avatar proves continuous existence over time — *I am the same entity I was yesterday* — without revealing who you are in the real world. You can maintain multiple context-specific identities without creating a linkable profile.
 
