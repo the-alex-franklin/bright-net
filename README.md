@@ -7,7 +7,7 @@
 
 I was sitting in my car when I got a call from "my bank." I've been a software developer for about a decade. I've been through this scam dozens of times. So I let it ring. He calls again. Then again. Fourth time, I pick up.
 
-Me: "Will you shut the fuck up?!"
+Me: "Will you shut up?!"
 
 Him: "Umm... what?"
 
