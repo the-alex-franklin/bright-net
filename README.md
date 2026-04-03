@@ -110,4 +110,4 @@ Tor provides maximum anonymity but no persistent identity. There's no concept of
 
 Time is a scarce resource that can't be faked, parallelized, or bought. Bright-net uses that fact as a foundation. The handshake either verifies or it doesn't — no heuristics, no guessing, no pattern matching. Cryptographic certainty where the current internet produces estimates.
 
-The question isn't whether this is possible. It is. The question is whether enough people care to build it.
+I don't know if it's possible to build. There might be some logical fallacy or paradox here that I'm not seeing, but I think it's worth finding out.
