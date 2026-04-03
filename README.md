@@ -1,4 +1,4 @@
-let me caveat this by saying: I don't know if it'll work, but I keep checking with ChatGPT and Claude "Is this possible? Does it have any paradoxes or logical fallacies that make it flawed?" and they keep saying "it's possible. That doesn't mean it'll be easy or automatically sucessful, but it's possible", so I'm still pushing on the idea. And then they point out some of the flaws, but it keeps coming down to me explaining poorly.
+let me caveat this by saying: I don't know if it'll work, but I keep checking with ChatGPT and Claude "Is this possible? Does it have any paradoxes or logical fallacies that make it hopelessly flawed?" and they keep saying "it's possible. That doesn't mean it'll be easy or automatically sucessful, but it's possible", so I'm still pushing on the idea. And then they point out some of the flaws, but it keeps coming down to me explaining poorly.
 
 Chain age doesn't matter. Anybody can have a fresh-chain or an aged-chain and use the bright-net like normal user. It's that, once someone starts DDoS'ing, then they're accruing many failed network handshake blocks very rapidly, which is what throttles down their hand-shake initiation rate
 
