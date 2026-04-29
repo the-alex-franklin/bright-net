@@ -21,6 +21,9 @@ pub enum BnError {
 
     #[error("key error: {0}")]
     Key(String),
+
+    #[error("I/O error: {0}")]
+    Io(String),
 }
 
 // Rust's `?` operator auto-converts foreign error types into BnError
@@ -34,5 +37,11 @@ impl From<serde_json::Error> for BnError {
 impl From<ed25519_dalek::SignatureError> for BnError {
     fn from(_: ed25519_dalek::SignatureError) -> Self {
         BnError::InvalidSignature
+    }
+}
+
+impl From<std::io::Error> for BnError {
+    fn from(e: std::io::Error) -> Self {
+        BnError::Io(e.to_string())
     }
 }

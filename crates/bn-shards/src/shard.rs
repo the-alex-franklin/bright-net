@@ -19,6 +19,8 @@
 // We layer ChaCha20-Poly1305 encryption on top so a stolen device file can't
 // be used without also knowing the PIN (and ideally biometric + TPM factor).
 
+use std::path::Path;
+
 use argon2::{
     password_hash::{rand_core::OsRng, SaltString},
     Argon2, PasswordHasher,
@@ -60,6 +62,26 @@ pub struct EncryptedShard {
     pub index: u8,
     pub total: u8,
     pub threshold: u8,
+}
+
+impl EncryptedShard {
+    /// Write this shard to disk. Creates parent directories if needed.
+    pub fn save(&self, path: &Path) -> Result<(), ShardError> {
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)
+                .map_err(|e| ShardError::Io(e.to_string()))?;
+        }
+        let json = serde_json::to_string_pretty(self)?;
+        std::fs::write(path, json).map_err(|e| ShardError::Io(e.to_string()))?;
+        Ok(())
+    }
+
+    /// Load an encrypted shard from disk.
+    pub fn load(path: &Path) -> Result<Self, ShardError> {
+        let json = std::fs::read_to_string(path)
+            .map_err(|e| ShardError::Io(e.to_string()))?;
+        Ok(serde_json::from_str(&json)?)
+    }
 }
 
 // ── Split ─────────────────────────────────────────────────────────────────────
@@ -269,6 +291,22 @@ mod tests {
         let encrypted = encrypt_shard(&shards[0], TEST_PIN).unwrap();
         let result = decrypt_shard(&encrypted, b"wrong-pin");
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn shard_save_and_load_roundtrip() {
+        let shards = split_secret(TEST_SECRET, 3, 5).unwrap();
+        let encrypted = encrypt_shard(&shards[0], TEST_PIN).unwrap();
+
+        let dir = std::env::temp_dir().join("bn-shards-test-save");
+        let path = dir.join("shard-1.json");
+        encrypted.save(&path).unwrap();
+
+        let loaded = EncryptedShard::load(&path).unwrap();
+        let decrypted = decrypt_shard(&loaded, TEST_PIN).unwrap();
+        assert_eq!(decrypted.bytes.as_slice(), shards[0].bytes.as_slice());
+
+        std::fs::remove_dir_all(&dir).ok();
     }
 
     #[test]

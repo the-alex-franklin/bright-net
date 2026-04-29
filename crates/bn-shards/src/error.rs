@@ -21,6 +21,9 @@ pub enum ShardError {
 
     #[error("serialization error: {0}")]
     Serialization(String),
+
+    #[error("I/O error: {0}")]
+    Io(String),
 }
 
 impl From<serde_json::Error> for ShardError {

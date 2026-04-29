@@ -5,13 +5,50 @@
 // append operation. You can only push a new block if it correctly links
 // to the current tip and carries a valid signature.
 
+use std::path::Path;
+
 use chrono::{DateTime, Utc};
+use serde::{Deserialize, Serialize};
 
 use crate::{
     block::{BlockKind, ChainBlock, GenesisBlock},
     crypto::{AvatarSigningKey, AvatarVerifyingKey},
     error::BnError,
 };
+
+// Serializable representation of a chain — no private key.
+// The signing key lives in shards and is passed in at load time.
+#[derive(Serialize, Deserialize)]
+struct ChainFile {
+    genesis: GenesisBlock,
+    blocks: Vec<ChainBlock>,
+}
+
+// ── Key resolution ────────────────────────────────────────────────────────────
+
+// Walk a chain's blocks to find the currently-active verifying key.
+// Starts at genesis.pubkey and advances through any KeyRotation blocks.
+// Called by validate_full (to replay key history) and load (to find the
+// current key after a chain with rotations is read from disk).
+fn resolve_verifying_key(
+    genesis: &GenesisBlock,
+    blocks: &[ChainBlock],
+) -> Result<AvatarVerifyingKey, BnError> {
+    let mut pubkey_hex = genesis.pubkey.as_str();
+
+    for block in blocks {
+        if let BlockKind::KeyRotation { ref new_pubkey } = block.kind {
+            pubkey_hex = new_pubkey.as_str();
+        }
+    }
+
+    let bytes = hex::decode(pubkey_hex)
+        .map_err(|_| BnError::Key("invalid pubkey hex resolving active key".into()))?;
+    let arr: [u8; 32] = bytes
+        .try_into()
+        .map_err(|_| BnError::Key("pubkey wrong length resolving active key".into()))?;
+    AvatarVerifyingKey::from_bytes(&arr)
+}
 
 // ── Maximum allowed clock skew when validating timestamps ────────────────────
 // During a handshake, a peer's block timestamp must be within this window
@@ -140,15 +177,17 @@ impl AvatarChain {
     /// Validate the entire chain from genesis to tip.
     /// O(n) — call this on load, not on every append.
     pub fn validate_full(&self) -> Result<(), BnError> {
-        // Verify genesis block signature.
         self.genesis.verify()?;
 
         let mut expected_prev = self.genesis.hash()?;
         let mut prev_timestamp: Option<DateTime<Utc>> = Some(self.genesis.created_at);
 
+        // Replay key history: start at genesis key, advance through rotations.
+        let mut active_key = resolve_verifying_key(&self.genesis, &[])?;
+
         for (i, block) in self.blocks.iter().enumerate() {
-            // Signature.
-            block.verify(&self.verifying_key)?;
+            // Signature — verified against the key active at this point in history.
+            block.verify(&active_key)?;
 
             // Index continuity.
             if block.index != i as u64 {
@@ -174,9 +213,88 @@ impl AvatarChain {
                 }
             }
 
+            // Advance the active key if this block is a rotation.
+            // The rotation block itself is signed by the OLD key (verified above);
+            // everything after it is signed by the new key.
+            if let BlockKind::KeyRotation { ref new_pubkey } = block.kind {
+                let bytes = hex::decode(new_pubkey)
+                    .map_err(|_| BnError::Key(format!("invalid new_pubkey hex at block {i}")))?;
+                let arr: [u8; 32] = bytes
+                    .try_into()
+                    .map_err(|_| BnError::Key(format!("new_pubkey wrong length at block {i}")))?;
+                active_key = AvatarVerifyingKey::from_bytes(&arr)?;
+            }
+
             expected_prev = block.hash()?;
             prev_timestamp = Some(block.timestamp);
         }
+
+        Ok(())
+    }
+
+    // ── Persistence ──────────────────────────────────────────────────────────
+
+    /// A stable identifier for this avatar derived from its genesis block hash.
+    /// Used as the directory name under ~/.bright-net/avatars/<id>/.
+    pub fn id(&self) -> Result<String, BnError> {
+        Ok(hex::encode(self.genesis.hash()?))
+    }
+
+    /// Write the chain to disk. The signing key is never included in the file —
+    /// it lives in shards and is supplied at load time.
+    /// Creates parent directories if they don't exist.
+    pub fn save(&self, path: &Path) -> Result<(), BnError> {
+        let file = ChainFile {
+            genesis: self.genesis.clone(),
+            blocks: self.blocks.clone(),
+        };
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(path, serde_json::to_string_pretty(&file)?)?;
+        Ok(())
+    }
+
+    /// Load a chain from disk. The signing key must be supplied separately
+    /// (reconstructed from shards). Runs validate_full before returning.
+    pub fn load(path: &Path, signing_key: AvatarSigningKey) -> Result<Self, BnError> {
+        let json = std::fs::read_to_string(path)?;
+        let file: ChainFile = serde_json::from_str(&json)?;
+
+        // Derive the current verifying key by replaying any key rotations.
+        let verifying_key = resolve_verifying_key(&file.genesis, &file.blocks)?;
+
+        let chain = AvatarChain {
+            genesis: file.genesis,
+            blocks: file.blocks,
+            signing_key,
+            verifying_key,
+        };
+        chain.validate_full()?;
+        Ok(chain)
+    }
+
+    // ── Key rotation ─────────────────────────────────────────────────────────
+
+    /// Rotate the avatar's signing key. Appends a KeyRotation block signed
+    /// with the OLD key, then swaps to the new keypair.
+    ///
+    /// After this call, all future blocks are signed with the new key.
+    /// The old key is dropped (and zeroed by ed25519-dalek's ZeroizeOnDrop).
+    /// Callers must re-shard and redistribute after rotating.
+    pub fn rotate_key(&mut self) -> Result<(), BnError> {
+        let (new_signing_key, new_verifying_key) = AvatarSigningKey::generate();
+        let new_pubkey_hex = hex::encode(new_verifying_key.to_bytes());
+
+        // Sign the rotation block with the current (old) key via append.
+        // self.verifying_key is still the old key here, so validate_block passes.
+        self.append(BlockKind::KeyRotation {
+            new_pubkey: new_pubkey_hex,
+        })?;
+
+        // Swap. The old signing key is dropped and zeroed here.
+        self.signing_key = new_signing_key;
+        self.verifying_key = new_verifying_key;
 
         Ok(())
     }
@@ -188,6 +306,13 @@ impl AvatarChain {
     /// fresh signed proofs without the signing key ever leaving this struct.
     pub fn sign(&self, message: &[u8]) -> [u8; 64] {
         self.signing_key.sign(message)
+    }
+
+    /// Export the current signing key bytes for secure storage.
+    /// Caller is responsible for encrypting before writing to disk.
+    /// Wrapped in Zeroizing so the caller's copy is wiped on drop.
+    pub(crate) fn signing_key_bytes(&self) -> zeroize::Zeroizing<[u8; 32]> {
+        self.signing_key.to_bytes()
     }
 
     // ── Handshake helpers ────────────────────────────────────────────────────
@@ -271,6 +396,81 @@ mod tests {
 
         assert_eq!(chain.height(), 5);
         chain.validate_full().unwrap();
+    }
+
+    #[test]
+    fn save_and_load_roundtrip() {
+        let mut chain = AvatarChain::new(Some("persist-test".into())).unwrap();
+        chain
+            .append(BlockKind::Custom {
+                payload_hash: hex::encode([42u8; 32]),
+            })
+            .unwrap();
+
+        let dir = std::env::temp_dir().join("bn-core-test-save");
+        let path = dir.join("chain.json");
+        chain.save(&path).unwrap();
+
+        // Extract the signing key bytes before moving the chain.
+        let key_bytes = chain.signing_key.to_bytes();
+        let signing_key = crate::crypto::AvatarSigningKey::from_bytes(&key_bytes);
+
+        let loaded = AvatarChain::load(&path, signing_key).unwrap();
+        assert_eq!(loaded.height(), chain.height());
+        assert_eq!(
+            hex::encode(loaded.tip_hash().unwrap()),
+            hex::encode(chain.tip_hash().unwrap())
+        );
+        loaded.validate_full().unwrap();
+
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn key_rotation_validates_full_chain() {
+        let mut chain = AvatarChain::new(Some("rotation-test".into())).unwrap();
+
+        chain.append(BlockKind::Custom { payload_hash: hex::encode([1u8; 32]) }).unwrap();
+        chain.rotate_key().unwrap();
+        chain.append(BlockKind::Custom { payload_hash: hex::encode([2u8; 32]) }).unwrap();
+
+        // height: 1 custom + 1 rotation + 1 custom = 3
+        assert_eq!(chain.height(), 3);
+        chain.validate_full().unwrap();
+    }
+
+    #[test]
+    fn multiple_rotations_validate() {
+        let mut chain = AvatarChain::new(None).unwrap();
+        chain.rotate_key().unwrap();
+        chain.rotate_key().unwrap();
+        chain.append(BlockKind::Custom { payload_hash: hex::encode([9u8; 32]) }).unwrap();
+        chain.validate_full().unwrap();
+    }
+
+    #[test]
+    fn save_load_roundtrip_after_rotation() {
+        let mut chain = AvatarChain::new(Some("rotation-persist".into())).unwrap();
+        chain.append(BlockKind::Custom { payload_hash: hex::encode([1u8; 32]) }).unwrap();
+        chain.rotate_key().unwrap();
+        chain.append(BlockKind::Custom { payload_hash: hex::encode([2u8; 32]) }).unwrap();
+
+        let dir = std::env::temp_dir().join("bn-core-test-rotation");
+        let path = dir.join("chain.json");
+        chain.save(&path).unwrap();
+
+        let key_bytes = chain.signing_key.to_bytes();
+        let signing_key = crate::crypto::AvatarSigningKey::from_bytes(&key_bytes);
+
+        let loaded = AvatarChain::load(&path, signing_key).unwrap();
+        assert_eq!(loaded.height(), chain.height());
+        assert_eq!(
+            hex::encode(loaded.tip_hash().unwrap()),
+            hex::encode(chain.tip_hash().unwrap()),
+        );
+        loaded.validate_full().unwrap();
+
+        std::fs::remove_dir_all(&dir).ok();
     }
 
     #[test]

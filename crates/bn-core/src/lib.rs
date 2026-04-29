@@ -5,3 +5,4 @@ pub mod crypto;
 pub mod block;
 pub mod chain;
 pub mod error;
+pub mod tree;
