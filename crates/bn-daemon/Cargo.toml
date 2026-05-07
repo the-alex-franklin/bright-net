@@ -1,0 +1,15 @@
+[package]
+name = "bn-daemon"
+version = "0.1.0"
+edition = "2021"
+license = "LicenseRef-All-Rights-Reserved"
+
+[[bin]]
+name = "bn-daemon"
+path = "src/main.rs"
+
+[dependencies]
+bn-core = { path = "../bn-core" }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+hex = "0.4"

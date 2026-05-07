@@ -3,5 +3,6 @@ members = [
     "crates/bn-core",
     "crates/bn-shards",
     "crates/bn-handshake",
+    "crates/bn-daemon",
 ]
 resolver = "2"

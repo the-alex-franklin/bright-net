@@ -1,115 +1,124 @@
-# Bright-net: Proof-of-Continuity Protocol
-*Alex Andria Franklin*
+# Bright-net
+
+A proof-of-continuity overlay network protocol. Passwordless authentication and DDoS resistance without central infrastructure, built on the idea that time is a resource that can't be faked or parallelized.
 
 ---
 
-## Preface
+## The problem it solves
 
-I was sitting in my car when I got a call from "my bank." I've been a software developer for about a decade. I've been through this scam dozens of times. So I let it ring. He calls again. Then again. Fourth time, I pick up.
+The internet was designed for a small network of trusted participants. TCP's handshake is optimistic — it accepts connection attempts before knowing anything about the initiator. We've spent fifty years bolting security onto that foundation: passwords, CAPTCHAs, rate limiters, fraud detection heuristics. None of it fixes the root issue.
 
-Me: "Will you shut up?!"
-
-Him: "Umm... what?"
-
-Me: "I know who you are. I know what you're doing. This is a hack that's so simple it barely qualifies as a hack anymore! Leave. me. alone."
-
-Him: "... No I'm not."
-
-Then he hangs up. And I'm sitting there fuming. (And I'm already vaguely familiar with SS7 and the fact that VoIP and HTTP were designed to trust easily-forged headers by default). And I'm sitting there, fuming: "😡 why does the internet work this way in 2026?! ...... 💡 yeah, why _does_ the internet work this way in 2026?"
+Bright-net takes a different approach. Before a connection is established, the initiator has to prove they are the same entity they were last time — by presenting a cryptographically signed chain of past interactions. Faking six months of history requires six months of real elapsed time. You can't buy or parallelize your way around the clock.
 
 ---
 
-## The Problem
+## What it's not
 
-The default Transmission Control Protocol that was still use today was defined in the 1975, when the internet was still called the ARPANET. Connection requests got optimistic treatment, because there were only like, 12 people on the network at the time, and half of them probably got coffee together. Headers could be trusted by default, and authentication happened through institutional relationships rather than cryptography. Then the network grew to billions of users, but we're still stuck with an architecture that wasn't built for an adversarial world.
-
-The security industry's response has been heuristics — pattern matching, behavioral analysis, educated guesses at scale. Heuristics aren't a solution. They're an accommodation to a broken foundation.
-
----
-
-## The Core Idea
-
-Bright-net replaces the traditional TCP handshake with an interwoven blockchain handshake at the transport layer. Every connection requires cryptographic proof that you are the same entity you were the last time — a chain of signed, timestamped blocks linking your current session to your cryptographically sealed history of network interactions. You can't fake six months of existence. Time is a resource that can't be parallelized or purchased.
+- **Not a cryptocurrency.** No tokens, no mining, no financial layer. This is communication infrastructure.
+- **Not a replacement for the internet.** It runs alongside the existing internet as an additional option.
+- **Not a surveillance system.** Avatars are pseudonymous. The protocol proves *I am who I was yesterday* without revealing who you are in the real world. The protocol has no visibility into what flows through an established tunnel.
 
 ---
 
-## What This Is Not
+## Core concepts
 
-- **Not a cryptocurrency.** No tokens, no coins, no financial instruments. This is communication infrastructure.
-- **Not a replacement for the internet.** Bright-net runs alongside the public internet, the dark net, and Web3. Coexistence is intentional.
-- **Not an authoritarian surveillance system.** Avatars are pseudonymous. The protocol proves continuity — *I am who I was yesterday* — without disclosing real-world identity.
+### The avatar chain
 
----
+Every participant has an *avatar* — an identity anchored by a genesis block containing their public key and a timestamp. Each subsequent interaction (handshake, key rotation) appends a new block to the chain, signed by the current key and hash-linked to the previous block. The chain can't be forged: altering any block breaks all subsequent hashes, and you can't fake blocks from the past without the private key.
 
-## How the Handshake Works
+### The handshake
 
-Verifying a chain tip is cheap. Just a signature check and a hash comparison. Creating a valid one requires the private key, the correct chain state, and most importantly, real elapsed time. You can't parallelize your way around the clock. This asymmetry is what makes the architecture self-defending: attacking someone at scale is orders of magnitude more expensive than defending against it.
+Two nodes connecting to each other exchange signed `HandshakeToken`s inside an encrypted QUIC tunnel:
 
-**Step 1 — TLS Tunnel Establishment (via QUIC)**
+1. **QUIC Retry** — forces the initiator to prove their source IP is reachable before any state is allocated. Eliminates spoofed-source floods at Layer 1.
+2. **Token exchange** — both parties send a signed token: current chain tip hash + fresh nonce + timestamp. The responder binds their token to the initiator's offer (preventing cross-session replay). Either both verify, or the connection aborts.
+3. **Block append** — on success, both sides record a `Handshake` block in their chain. Failed attempts feed into exponential backoff.
 
-An encrypted tunnel is established between both parties using UDP/QUIC/TLS. UDP bypasses the SYN-ACK three-way handshake entirely. QUIC runs on top of it, folding connection establishment and TLS 1.3 encryption into a single round trip. QUIC's built-in Retry mechanism then forces the initiator to prove their source IP is reachable before any application state is allocated, filtering spoofed-source floods at the transport layer for free.
+### The avatar tree
 
-**Step 2 — Chain Tip Exchange**
+A user's identity is a tree: one root (shardable across devices) and any number of named branches — work, personal, gaming, etc. Each branch is an independent avatar chain. External peers see only the branch they're interacting with. The root and other branches are invisible to them; the protocol provides no way to link branches together.
 
-Inside the encrypted tunnel, both parties exchange signed HandshakeTokens containing:
+### Key rotation
 
-- Current chain tip hash (links the session to the avatar's continuous history)
-- Fresh timestamp and random nonce (prevents replay attacks)
-- Ed25519 signature over all fields (proves key control)
-
-Each party verifies the other's token. The responder binds their token to the initiator's offer via SHA-256, so no valid response can be detached and replayed against a different session.
-
-**Step 3 — Verification or Abort**
-
-If both tokens verify, the connection proceeds and both parties append a new Handshake block to their respective chains. If either verification fails, the handshake aborts, no block is written, and the failed attempt is recorded against the initiator for rate-limiting purposes. Repeated failures trigger exponential backoff.
-
-This produces a default-deny architecture: without proof of continuous existence, connections don't get rejected — they simply never get established.
+Avatars can rotate their signing key without losing their history. A `KeyRotation` block is signed by the old key and records the new public key. The chain validator replays key history when verifying old blocks.
 
 ---
 
-## DDoS Resistance
+## Codebase
 
-Three independent defenses operate at distinct layers:
+```
+crates/
+  bn-core/       — block types, AvatarChain, AvatarTree, Ed25519/SHA-256 crypto
+  bn-shards/     — Shamir's Secret Sharing + ChaCha20-Poly1305 + Argon2id (key backup)
+  bn-handshake/  — HandshakeToken, HandshakeOffer/Response, RateLimiter
+  bn-daemon/     — identity management binary
+```
 
-**Layer 1 — QUIC Retry (IP-spoofing filter)**
-Forces any initiator to prove their source IP is reachable before the responder allocates any state. Spoofed-source floods are eliminated at the transport layer.
+### What's implemented
 
-**Layer 2 — Proof-of-Continuity (Sybil resistance)**
-Every handshake requires a valid chain tip linked to a continuous history. Building six months of history requires six months of real elapsed time, regardless of computational power. Large-scale sustained attacks become prohibitively expensive infrastructure projects.
+| Crate | Status |
+|---|---|
+| `bn-core` | Genesis + chain blocks, `AvatarChain` (append, validate, key rotation, persist), `AvatarTree` (branches, certifications, persist) |
+| `bn-shards` | Shamir split/reconstruct, ChaCha20-Poly1305 shard encryption, shard file I/O |
+| `bn-handshake` | `HandshakeToken`, `HandshakeOffer`/`HandshakeResponse` with offer binding, `perform_handshake` (in-memory), `RateLimiter` with exponential backoff |
+| `bn-daemon` | `init`, `status`, `branch new`, `branch list` commands |
 
-**Layer 3 — Failure-rate throttling**
-Failed handshake verifications trigger exponential backoff. An attacker rotating through fresh, unaged chains burns through attempts rapidly and finds themselves progressively throttled with diminishing returns.
-
----
-
-## Passkeys: Sign-up/Login for the Last Time
-
-Today, when you log into a service, you ask them for permission — they hold the credential, you prove yourself to them.
-
-Bright-net inverts this. Your avatar chain is your pseudonymous identity. When connecting to a service, you pass a cryptographic passkey to them, derived from your chain tip. The service doesn't issue you anything. It receives proof from you.
-
-This eliminates passwords entirely. No shared secrets to steal, phish, or forget. No "forgot password" flows. No account recovery. The credential lives with you, not with them.
-
-Privacy isn't a policy or a promise. It's structurally enforced by the protocol.
+Network transport (QUIC), CLI, and device pairing are not yet built.
 
 ---
 
-## Avatars and Compartmentalization
+## Getting started
 
-Your digital presence is organized as a Merkle tree of personas. Multiple avatar chains fork from a single root — you might have separate avatars for work, gaming, shopping, or anonymous discussion. From the outside, each branch is independent. External parties only see the branch relevant to their interaction. Branches can't be linked together through the protocol layer.
+```bash
+# Run all tests
+cargo test --workspace
 
-Avatars are pseudonymous, not anonymous. Each avatar proves continuous existence over time — *I am the same entity I was yesterday* — without revealing who you are in the real world. You can maintain multiple context-specific identities without creating a linkable profile.
+# Build the daemon
+cargo build -p bn-daemon
+
+# Create a new identity
+cargo run -p bn-daemon -- init --label "my-root"
+
+# Add avatar branches
+cargo run -p bn-daemon -- branch new --label "work"
+cargo run -p bn-daemon -- branch new --label "personal"
+
+# Check status
+cargo run -p bn-daemon -- status
+```
+
+Identity data is stored under `~/.bright-net/`. Override with `--data-dir <path>`.
 
 ---
 
-## Comparison: Bright-net vs. Tor
+## Privacy model
 
-Tor provides maximum anonymity but no persistent identity. There's no concept of being recognizable across sessions — that's the point. Bright-net provides continuous recognizability without real-world identity disclosure. These serve different use cases and can coexist. Someone who wants anonymity needs Tor. Someone who wants trusted, persistent pseudonymity across time needs Bright-net.
+Two rules that are non-negotiable throughout the implementation:
+
+1. **User data is private.** Rate limiting and analysis apply only to tunnel *establishment*. Once a handshake completes, the connection is opaque to the protocol. The protocol never inspects tunnel content.
+
+2. **User identity is private.** Avatars are pseudonymous. The protocol proves continuity without revealing real-world identity. Branches of the same avatar tree cannot be linked through the protocol layer.
 
 ---
 
-## Conclusion
+## Cryptographic primitives
 
-Time is a scarce resource that can't be faked, parallelized, or bought. Bright-net uses that fact as a foundation. The handshake either verifies or it doesn't — no heuristics, no guessing, no pattern matching. Cryptographic certainty where the current internet produces estimates.
+| Primitive | Crate | Purpose |
+|---|---|---|
+| Ed25519 | `ed25519-dalek` | Block and token signatures |
+| SHA-256 | `sha2` | Block hashing, chain tip |
+| ChaCha20-Poly1305 | `chacha20poly1305` | Shard encryption |
+| Argon2id | `argon2` | Key derivation |
+| Shamir GF(256) | `sharks` | Secret sharing across devices |
+| QUIC/TLS | `quinn` | Transport layer (Phase 5) |
 
-I don't know if it's possible to build. There might be some logical fallacy or paradox here that I'm not seeing, but I think it's worth finding out.
+---
+
+## What's next
+
+- **Phase 5** — QUIC transport: `bn-net` crate, wire up `HandshakeOffer`/`HandshakeResponse` over a real network connection
+- **Phase 6** — CLI: `bn-cli` with `clap`, communicating with `bn-daemon` over a local socket
+- **Phase 7** — Integration tests: two daemon instances over loopback QUIC, full handshake end-to-end
+- Further: chain pruning/checkpointing, avatar lifecycle (burn), device pairing via shards, router/embedded targets
+
+See `CLAUDE.md` for the full development roadmap.
