@@ -9,7 +9,11 @@ pub fn default_base_dir() -> PathBuf {
 }
 
 pub fn key_path(base: &Path) -> PathBuf {
-    base.join("root.key")
+    base.join("identity.key")
+}
+
+pub fn chain_path(base: &Path) -> PathBuf {
+    base.join("chain.json")
 }
 
 pub fn save_key(bytes: &[u8; 32], path: &Path) -> Result<()> {
@@ -25,6 +29,6 @@ pub fn load_key(path: &Path) -> Result<AvatarSigningKey> {
         .with_context(|| format!("reading key file: {}", path.display()))?;
     let arr: [u8; 32] = bytes
         .try_into()
-        .map_err(|_| anyhow::anyhow!("root.key has wrong length (expected 32 bytes)"))?;
+        .map_err(|_| anyhow::anyhow!("identity.key has wrong length (expected 32 bytes)"))?;
     Ok(AvatarSigningKey::from_bytes(&arr))
 }

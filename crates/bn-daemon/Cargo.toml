@@ -10,6 +10,12 @@ path = "src/main.rs"
 
 [dependencies]
 bn-core = { path = "../bn-core" }
+bn-handshake = { path = "../bn-handshake" }
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 hex = "0.4"
+serde_json = "1"
+quinn = "0.11"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "io-util"] }
+rustls = { version = "0.23", features = ["ring"] }
+rcgen = "0.13"

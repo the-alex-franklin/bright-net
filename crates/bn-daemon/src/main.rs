@@ -1,16 +1,17 @@
+use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 
 use anyhow::{bail, Context, Result};
 use clap::{Parser, Subcommand};
 
-use bn_core::tree::AvatarTree;
+use bn_core::chain::AvatarChain;
 
+mod net;
 mod store;
 
 #[derive(Parser)]
 #[command(name = "bn-daemon", about = "Bright-net identity daemon")]
 struct Cli {
-    /// Base data directory (default: ~/.bright-net)
     #[arg(long)]
     data_dir: Option<PathBuf>,
     #[command(subcommand)]
@@ -24,37 +25,31 @@ enum Command {
         #[arg(long)]
         label: Option<String>,
     },
-    /// Show identity and branch status
+    /// Show identity status
     Status,
-    /// Manage avatar branches
-    Branch {
-        #[command(subcommand)]
-        cmd: BranchCmd,
+    /// Listen for an inbound handshake
+    Serve {
+        /// Address to listen on (default: 0.0.0.0:4433)
+        #[arg(default_value = "0.0.0.0:4433")]
+        addr: SocketAddr,
+    },
+    /// Initiate a handshake with a peer
+    Connect {
+        /// Peer address (e.g. 192.168.1.1:4433)
+        addr: SocketAddr,
     },
 }
 
-#[derive(Subcommand)]
-enum BranchCmd {
-    /// Create a new avatar branch
-    New {
-        #[arg(long)]
-        label: Option<String>,
-    },
-    /// List all avatar branches
-    List,
-}
-
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let cli = Cli::parse();
     let base = cli.data_dir.unwrap_or_else(store::default_base_dir);
 
     match cli.command {
         Command::Init { label } => cmd_init(&base, label),
         Command::Status => cmd_status(&base),
-        Command::Branch { cmd } => match cmd {
-            BranchCmd::New { label } => cmd_branch_new(&base, label),
-            BranchCmd::List => cmd_branch_list(&base),
-        },
+        Command::Serve { addr } => cmd_serve(&base, addr).await,
+        Command::Connect { addr } => cmd_connect(&base, addr).await,
     }
 }
 
@@ -67,78 +62,52 @@ fn cmd_init(base: &Path, label: Option<String>) -> Result<()> {
         );
     }
 
-    let tree = AvatarTree::new(label).context("creating identity")?;
-    let key_bytes = tree.root_signing_key_bytes();
-    store::save_key(&key_bytes, &key_path).context("saving root key")?;
-    tree.save(base).context("saving identity")?;
+    let chain = AvatarChain::new(label).context("creating identity")?;
+    let key_bytes = chain.signing_key_bytes();
+    store::save_key(&key_bytes, &key_path).context("saving key")?;
+    chain.save(&store::chain_path(base)).context("saving chain")?;
 
-    let root_id = tree.root_id().context("computing root id")?;
+    let id = chain.id().context("computing id")?;
     println!("identity created");
-    println!("root  {}", &root_id[..16]);
+    println!("id  {}", &id[..16]);
     Ok(())
 }
 
 fn cmd_status(base: &Path) -> Result<()> {
-    let tree = load_tree(base)?;
-    let root_id = tree.root_id().context("computing root id")?;
-
-    println!("root  {}  branches={}", &root_id[..16], tree.branch_count());
-
-    let mut ids: Vec<&str> = tree.branch_ids();
-    ids.sort();
-    for id in ids {
-        let branch = tree.branch(id).unwrap();
-        let label = branch.cert.label.as_deref().unwrap_or("(unlabeled)");
-        let tip = hex::encode(branch.chain.tip_hash().context("computing tip")?);
-        println!(
-            "  branch {}  {}  height={}  tip={}",
-            &id[..16],
-            label,
-            branch.chain.height(),
-            &tip[..16],
-        );
-    }
-
+    let chain = load_chain(base)?;
+    let id = chain.id().context("computing id")?;
+    let tip = hex::encode(chain.tip_hash().context("computing tip")?);
+    println!("id      {}", &id[..16]);
+    println!("height  {}", chain.height());
+    println!("tip     {}", &tip[..16]);
     Ok(())
 }
 
-fn cmd_branch_new(base: &Path, label: Option<String>) -> Result<()> {
-    let mut tree = load_tree(base)?;
-    let branch_id = tree.new_branch(label.clone()).context("creating branch")?;
-    tree.save(base).context("saving identity")?;
-
-    let display_label = label.as_deref().unwrap_or("(unlabeled)");
-    println!("branch created  {}  {}", &branch_id[..16], display_label);
+async fn cmd_serve(base: &Path, addr: SocketAddr) -> Result<()> {
+    let mut chain = load_chain(base)?;
+    let peer_id = net::serve(&mut chain, addr).await?;
+    save_chain(base, &chain)?;
+    println!("handshake complete");
+    println!("peer    {}", &peer_id[..16]);
+    println!("height  {}", chain.height());
     Ok(())
 }
 
-fn cmd_branch_list(base: &Path) -> Result<()> {
-    let tree = load_tree(base)?;
-
-    if tree.branch_count() == 0 {
-        println!("no branches — use 'branch new' to create one");
-        return Ok(());
-    }
-
-    let mut ids: Vec<&str> = tree.branch_ids();
-    ids.sort();
-    for id in ids {
-        let branch = tree.branch(id).unwrap();
-        let label = branch.cert.label.as_deref().unwrap_or("(unlabeled)");
-        let tip = hex::encode(branch.chain.tip_hash().context("computing tip")?);
-        println!(
-            "{}  {}  height={}  tip={}",
-            &id[..16],
-            label,
-            branch.chain.height(),
-            &tip[..16],
-        );
-    }
-
+async fn cmd_connect(base: &Path, addr: SocketAddr) -> Result<()> {
+    let mut chain = load_chain(base)?;
+    let peer_id = net::connect(&mut chain, addr).await?;
+    save_chain(base, &chain)?;
+    println!("handshake complete");
+    println!("peer    {}", &peer_id[..16]);
+    println!("height  {}", chain.height());
     Ok(())
 }
 
-fn load_tree(base: &Path) -> Result<AvatarTree> {
-    let key = store::load_key(&store::key_path(base)).context("loading root key")?;
-    AvatarTree::load(base, key).context("loading identity")
+fn load_chain(base: &Path) -> Result<AvatarChain> {
+    let key = store::load_key(&store::key_path(base)).context("loading key")?;
+    AvatarChain::load(&store::chain_path(base), key).context("loading chain")
+}
+
+fn save_chain(base: &Path, chain: &AvatarChain) -> Result<()> {
+    chain.save(&store::chain_path(base)).context("saving chain")
 }
